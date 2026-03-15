@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SalesOS — AI-Powered Sales Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    /* ─── Reset & Root ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0f0800;
+      --bg2:     #1a0e00;
+      --bg3:     #251500;
+      --bg4:     #2e1a00;
+      --saf:     #ff9800;
+      --amb:     #ffaa00;
+      --gold:    #f5c518;
+      --mar:     #ffd54f;
+      --brn:     #e05c00;
+      --verm:    #ff3d00;
+      --border:  #3d2000;
+      --border2: #5a3000;
+      --txt:     #fff8ee;
+      --txt2:    #c09060;
+      --txt3:    #7a5030;
+      --green:   #7ab648;
+      --purple:  #a78bfa;
+      --pink:    #f472b6;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      color: var(--txt);
+      overflow: hidden;
+    }
+
+    /* ─── App Shell ─── */
+    .app {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ════════════════════════════════
+       SIDEBAR
+    ════════════════════════════════ */
+    .sidebar {
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .brand {
+      padding: 20px 18px 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--saf);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    .brand-icon svg { width: 20px; height: 20px; fill: var(--bg); }
+    .brand-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--txt);
+      line-height: 1;
+    }
+    .brand-sub {
+      font-size: 9px;
+      color: var(--saf);
+      letter-spacing: 1.5px;
+      margin-top: 3px;
+      font-weight: 500;
+    }
+
+    .nav-section { padding: 14px 18px 4px; }
+    .nav-label {
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      color: var(--txt3);
+      margin-bottom: 6px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--txt2);
+      cursor: pointer;
+      margin-bottom: 2px;
+      transition: background .15s, color .15s;
+      user-select: none;
+    }
+    .nav-item:hover { background: var(--bg3); color: var(--txt); }
+    .nav-item.active {
+      background: var(--bg4);
+      color: var(--saf);
+      border: 0.5px solid var(--border2);
+    }
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+    .ni-dash   { background: #3d1a00; color: var(--saf); }
+    .ni-deals  { background: #1a2d00; color: var(--green); }
+    .ni-leads  { background: #3d002d; color: var(--pink); }
+    .ni-prod   { background: #1a1a3d; color: var(--purple); }
+    .ni-team   { background: #3d1a00; color: var(--amb); }
+    .ni-anl    { background: #003d2d; color: #5dcaa5; }
+    .ni-ai     { background: #3d002d; color: var(--pink); }
+    .ni-set    { background: var(--bg3); color: var(--txt3); }
+
+    .nav-badge {
+      margin-left: auto;
+      background: var(--saf);
+      color: var(--bg);
+      font-size: 10px;
+      font-weight: 500;
+      padding: 1px 7px;
+      border-radius: 20px;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .ai-engine-card {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .aie-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .aie-label { font-size: 11px; font-weight: 500; color: var(--saf); }
+    .aie-live  { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--green); }
+    .live-dot  { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{ opacity:1; } 50%{ opacity:.4; } }
+    .aie-score {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--txt);
+      line-height: 1;
+    }
+    .aie-score span { font-size: 13px; font-weight: 400; color: var(--txt3); }
+    .aie-bar-bg { height: 4px; background: var(--border); border-radius: 2px; margin-top: 8px; }
+    .aie-bar    { height: 4px; background: linear-gradient(90deg, var(--saf), var(--gold)); border-radius: 2px; width: 92%; transition: width 1s ease; }
+    .aie-perf   { font-size: 10px; color: var(--txt3); margin-top: 4px; }
+
+    .user-row { display: flex; align-items: center; gap: 10px; }
+    .user-av {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--saf);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--bg);
+      flex-shrink: 0;
+    }
+    .user-name { font-size: 13px; font-weight: 500; color: var(--txt); }
+    .user-role { font-size: 11px; color: var(--txt3); }
+
+    /* ════════════════════════════════
+       MAIN AREA
+    ════════════════════════════════ */
+    .main {
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    /* ─── Topbar ─── */
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 22px 26px 0;
+      flex-shrink: 0;
+    }
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--txt);
+      line-height: 1.15;
+    }
+    .page-date { font-size: 12px; color: var(--txt3); margin-top: 6px; }
+
+    .top-actions { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+
+    .btn-month {
+      background: var(--bg3);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      padding: 10px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-month:hover { background: var(--bg4); }
+    .btn-month-icon { font-size: 13px; color: var(--txt3); margin-bottom: 2px; }
+    .btn-month-val  {
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--txt);
+      line-height: 1.2;
+    }
+
+    .btn-new {
+      background: var(--saf);
+      border: none;
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-family: 'Syne', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--bg);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.3;
+      transition: background .15s;
+    }
+    .btn-new:hover { background: var(--amb); }
+    .btn-new-plus  { font-size: 18px; line-height: 1; }
+
+    .top-av {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--saf);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--bg);
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .top-av:hover { opacity: .85; }
+
+    /* ─── Metric Cards ─── */
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 16px 26px 10px;
+      flex-shrink: 0;
+    }
+    .mcard {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      cursor: pointer;
+      transition: border-color .2s, transform .15s;
+    }
+    .mcard:hover { border-color: var(--border2); transform: translateY(-1px); }
+
+    .mcard-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .mcard-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+    .mc1 .mcard-icon { background: #3d1a00; color: var(--saf); }
+    .mc2 .mcard-icon { background: #1a2d00; color: var(--green); }
+    .mc3 .mcard-icon { background: #3d002d; color: var(--pink); }
+    .mc4 .mcard-icon { background: #1a1a3d; color: var(--purple); }
+
+    .mcard-badge {
+      padding: 3px 9px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 500;
+    }
+    .mb-up { background: #1a2d00; color: var(--green); }
+    .mb-dn { background: #3d0a00; color: var(--verm); }
+
+    .mcard-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--txt);
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+    .mcard-label { font-size: 12px; font-weight: 500; color: var(--txt2); }
+    .mcard-sub   { font-size: 11px; color: var(--txt3); margin-top: 2px; }
+
+    /* ─── Content Grid ─── */
+    .content {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 14px;
+      padding: 8px 26px 26px;
+      flex: 1;
+    }
+
+    .col-left  { display: flex; flex-direction: column; gap: 14px; }
+    .col-right { display: flex; flex-direction: column; gap: 14px; }
+
+    /* ─── Panel ─── */
+    .panel {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    .ptitle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .ptitle-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--txt);
+    }
+    .ptitle-sub { font-size: 11px; color: var(--txt3); }
+
+    /* ─── Chart Legend ─── */
+    .chart-legend {
+      display: flex;
+      gap: 16px;
+      font-size: 11px;
+      color: var(--txt3);
+      align-items: center;
+    }
+    .legend-dot {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .ld-line {
+      width: 22px;
+      height: 2px;
+      border-radius: 1px;
+    }
+    .ld-dashed {
+      width: 22px;
+      height: 0;
+      border-top: 2px dashed var(--gold);
+    }
+
+    /* ─── Chart Canvas ─── */
+    .chart-wrap { position: relative; width: 100%; height: 200px; }
+
+    /* ─── Pipeline Stages ─── */
+    .stage-list { display: flex; flex-direction: column; gap: 11px; }
+    .stage-item { display: flex; flex-direction: column; gap: 4px; }
+    .stage-top  { display: flex; align-items: center; justify-content: space-between; }
+    .stage-name {
+      font-size: 12px;
+      color: var(--txt2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .stage-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .stage-val  { font-size: 12px; font-weight: 500; color: var(--txt); }
+    .stage-bar-bg { height: 5px; background: var(--border); border-radius: 3px; }
+    .stage-bar    { height: 5px; border-radius: 3px; transition: width 1s ease; }
+
+    /* ─── Lead Rows ─── */
+    .leads-list { display: flex; flex-direction: column; gap: 6px; }
+    .lead-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 10px;
+      background: var(--bg3);
+      border-radius: 9px;
+      border: 0.5px solid var(--border);
+      transition: border-color .15s;
+      cursor: pointer;
+    }
+    .lead-row:hover { border-color: var(--border2); }
+
+    .lead-av {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .la1 { background: #3d1a00; color: var(--saf); }
+    .la2 { background: #3d002d; color: var(--pink); }
+    .la3 { background: #1a1a3d; color: var(--purple); }
+    .la4 { background: #1a2d00; color: var(--green); }
+    .la5 { background: #2d1a00; color: var(--amb); }
+
+    .lead-info  { flex: 1; min-width: 0; }
+    .lead-name  { font-size: 12px; font-weight: 500; color: var(--txt); }
+    .lead-co    { font-size: 11px; color: var(--txt3); }
+
+    .lead-pill {
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 500;
+      flex-shrink: 0;
+    }
+    .lp-hot  { background: #3d1a00; color: var(--saf);   border: 0.5px solid var(--brn); }
+    .lp-warm { background: #2d2200; color: var(--gold);  border: 0.5px solid #5a4400; }
+    .lp-won  { background: #1a2d00; color: var(--green); border: 0.5px solid #2d5000; }
+    .lp-cold { background: var(--bg4); color: var(--txt3); border: 0.5px solid var(--border); }
+
+    .lead-val { font-size: 12px; font-weight: 500; color: var(--txt); min-width: 52px; text-align: right; }
+
+    /* ─── Score Bar ─── */
+    .score-wrap { display: flex; align-items: center; gap: 6px; min-width: 70px; }
+    .score-bg   { flex: 1; height: 3px; background: var(--border); border-radius: 2px; }
+    .score-fill { height: 3px; border-radius: 2px; background: linear-gradient(90deg, var(--saf), var(--gold)); }
+
+    /* ─── Tasks ─── */
+    .task-list { display: flex; flex-direction: column; gap: 6px; }
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
+      background: var(--bg3);
+      border-radius: 8px;
+      border: 0.5px solid var(--border);
+    }
+    .task-cb {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1.5px solid var(--border2);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+    .task-cb.done { background: var(--saf); border-color: var(--saf); color: var(--bg); }
+    .task-txt { flex: 1; font-size: 11px; color: var(--txt2); line-height: 1.3; }
+    .task-pri { font-size: 9px; padding: 2px 7px; border-radius: 10px; flex-shrink: 0; }
+    .tp-h { background: #3d1a00; color: var(--saf); }
+    .tp-m { background: #2d2200; color: var(--gold); }
+
+    /* ─── Activity Feed ─── */
+    .act-list { display: flex; flex-direction: column; }
+    .act-item {
+      display: flex;
+      gap: 10px;
+      padding: 9px 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .act-item:last-child { border-bottom: none; }
+    .act-ic {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+      font-size: 12px;
+    }
+    .aic1 { background: #3d1a00; color: var(--saf); }
+    .aic2 { background: #1a2d00; color: var(--green); }
+    .aic3 { background: #2d2200; color: var(--gold); }
+    .aic4 { background: #3d002d; color: var(--pink); }
+    .act-body { flex: 1; }
+    .act-text { font-size: 12px; color: var(--txt); line-height: 1.4; }
+    .act-time { font-size: 10px; color: var(--txt3); margin-top: 2px; }
+
+    /* ─── AI Engine Chat Panel ─── */
+    .ai-chat {
+      background: var(--bg);
+      border: 1px solid var(--border2);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .ai-chat-header {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg3);
+    }
+    .ai-chat-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--saf); animation: pulse 2s infinite; }
+    .ai-chat-title { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: var(--saf); }
+    .ai-chat-powered { font-size: 10px; color: var(--txt3); margin-left: auto; }
+    .ai-messages { flex: 1; padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+    .msg { padding: 9px 11px; border-radius: 8px; font-size: 11px; line-height: 1.55; }
+    .msg.ai   { background: #3d1a00; color: #ffe0b2; border-left: 2px solid var(--saf); }
+    .msg.user { background: #1a0d00; color: #c09060; border-right: 2px solid var(--gold); text-align: right; }
+    .msg-label { font-size: 9px; font-weight: 500; margin-bottom: 4px; }
+    .msg.ai   .msg-label { color: var(--saf); }
+    .msg.user .msg-label { color: var(--gold); }
+    .ai-input-row { padding: 10px 14px; border-top: 1px solid var(--border); display: flex; gap: 8px; }
+    .ai-input {
+      flex: 1;
+      background: var(--bg3);
+      border: 0.5px solid var(--border2);
+      border-radius: 7px;
+      padding: 7px 11px;
+      font-size: 11px;
+      color: #ffe0b2;
+      outline: none;
+      font-family: 'DM Sans', sans-serif;
+      transition: border-color .15s;
+    }
+    .ai-input::placeholder { color: #5d3a20; }
+    .ai-input:focus { border-color: var(--saf); }
+    .ai-send {
+      background: var(--saf);
+      border: none;
+      border-radius: 7px;
+      padding: 7px 13px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--bg);
+      cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      transition: background .15s;
+    }
+    .ai-send:hover { background: var(--amb); }
+
+    /* ─── Donut ─── */
+    .donut-row { display: flex; align-items: center; gap: 16px; }
+    svg.donut-svg { width: 80px; height: 80px; flex-shrink: 0; }
+    .donut-legend { display: flex; flex-direction: column; gap: 6px; flex: 1; }
+    .dl-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--txt2); }
+    .dl-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ─── Scrollbar ─── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ══════════════ SIDEBAR ══════════════ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div class="brand-name">SalesOS</div>
+      <div class="brand-sub">AI-POWERED</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Main menu</div>
+      <div class="nav-item active">
+        <span class="nav-icon ni-dash">⊞</span>Dashboard
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon ni-deals">◈</span>Deals
+        <span class="nav-badge">342</span>
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon ni-leads">◎</span>Leads
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon ni-prod">▦</span>Products
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon ni-team">◉</span>Team
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon ni-anl">▸</span>Analytics
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">System</div>
+      <div class="nav-item">
+        <span class="nav-icon ni-ai">✦</span>AI Engine
+      </div>
+      <div class="nav-item">
+        <span class="nav-icon ni-set">⚙</span>Settings
+      </div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="ai-engine-card">
+        <div class="aie-top">
+          <span class="aie-label">AI Engine</span>
+          <span class="aie-live"><span class="live-dot"></span>LIVE</span>
+        </div>
+        <div class="aie-score">92<span>/100</span></div>
+        <div class="aie-bar-bg"><div class="aie-bar"></div></div>
+        <div class="aie-perf">Performance Score</div>
+      </div>
+      <div class="user-row">
+        <div class="user-av">RS</div>
+        <div>
+          <div class="user-name">Rahul Singh</div>
+          <div class="user-role">Sales Director</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ══════════════ MAIN ══════════════ -->
+  <main class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div>
+        <div class="page-title">Sales Management<br>Dashboard</div>
+        <div class="page-date">Saturday, 14 March 2026 · Q1 FY2026</div>
+      </div>
+      <div class="top-actions">
+        <div class="btn-month">
+          <div class="btn-month-icon">⊞</div>
+          <div class="btn-month-val">Mar<br>2026</div>
+        </div>
+        <button class="btn-new">
+          <span class="btn-new-plus">+</span>
+          New<br>Deal
+        </button>
+        <div class="top-av">RS</div>
+      </div>
+    </div>
+
+    <!-- Metric Cards -->
+    <div class="metrics">
+      <div class="mcard mc1">
+        <div class="mcard-top">
+          <div class="mcard-icon">₹</div>
+          <span class="mcard-badge mb-up">+28.4%</span>
+        </div>
+        <div class="mcard-val">₹2.84 Cr</div>
+        <div class="mcard-label">Total Revenue</div>
+        <div class="mcard-sub">vs last quarter</div>
+      </div>
+      <div class="mcard mc2">
+        <div class="mcard-top">
+          <div class="mcard-icon">◈</div>
+          <span class="mcard-badge mb-up">+14</span>
+        </div>
+        <div class="mcard-val">342</div>
+        <div class="mcard-label">Active Deals</div>
+        <div class="mcard-sub">12 closing this week</div>
+      </div>
+      <div class="mcard mc3">
+        <div class="mcard-top">
+          <div class="mcard-icon">✦</div>
+          <span class="mcard-badge mb-up">+31%</span>
+        </div>
+        <div class="mcard-val">1,847</div>
+        <div class="mcard-label">AI Leads Scored</div>
+        <div class="mcard-sub">97.2% accuracy</div>
+      </div>
+      <div class="mcard mc4">
+        <div class="mcard-top">
+          <div class="mcard-icon">▲</div>
+          <span class="mcard-badge mb-up">+6.2%</span>
+        </div>
+        <div class="mcard-val">₹8.3L</div>
+        <div class="mcard-label">Avg Deal Size</div>
+        <div class="mcard-sub">up from ₹7.8L</div>
+      </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content">
+
+      <!-- LEFT COLUMN -->
+      <div class="col-left">
+
+        <!-- Revenue Chart -->
+        <div class="panel">
+          <div class="ptitle">
+            <div>
+              <div class="ptitle-text">Revenue Performance</div>
+              <div class="ptitle-sub">Actual vs AI Forecast · FY 2025–26 (₹ Lakhs)</div>
+            </div>
+            <div class="chart-legend">
+              <span class="legend-dot">
+                <span class="ld-line" style="background:var(--saf)"></span>Actual
+              </span>
+              <span class="legend-dot">
+                <span class="ld-dashed"></span>Forecast
+              </span>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="revChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Lead Intelligence Table -->
+        <div class="panel">
+          <div class="ptitle">
+            <div class="ptitle-text">Lead Intelligence</div>
+            <div class="ptitle-sub">AI-ranked · top 5</div>
+          </div>
+          <div class="leads-list">
+            <div class="lead-row">
+              <div class="lead-av la1">PM</div>
+              <div class="lead-info">
+                <div class="lead-name">Priya Menon</div>
+                <div class="lead-co">TechNova</div>
+              </div>
+              <div class="score-wrap">
+                <div class="score-bg"><div class="score-fill" style="width:92%"></div></div>
+                <span style="font-size:10px;color:var(--txt3);min-width:22px">92</span>
+              </div>
+              <span class="lead-pill lp-hot">Hot</span>
+              <div class="lead-val">₹4.8L</div>
+            </div>
+            <div class="lead-row">
+              <div class="lead-av la2">AK</div>
+              <div class="lead-info">
+                <div class="lead-name">Arjun Kapoor</div>
+                <div class="lead-co">Finedge</div>
+              </div>
+              <div class="score-wrap">
+                <div class="score-bg"><div class="score-fill" style="width:87%"></div></div>
+                <span style="font-size:10px;color:var(--txt3);min-width:22px">87</span>
+              </div>
+              <span class="lead-pill lp-hot">Hot</span>
+              <div class="lead-val">₹7.2L</div>
+            </div>
+            <div class="lead-row">
+              <div class="lead-av la3">SS</div>
+              <div class="lead-info">
+                <div class="lead-name">Sana Sheikh</div>
+                <div class="lead-co">UrbanCore</div>
+              </div>
+              <div class="score-wrap">
+                <div class="score-bg"><div class="score-fill" style="width:68%"></div></div>
+                <span style="font-size:10px;color:var(--txt3);min-width:22px">68</span>
+              </div>
+              <span class="lead-pill lp-warm">Warm</span>
+              <div class="lead-val">₹2.1L</div>
+            </div>
+            <div class="lead-row">
+              <div class="lead-av la4">VR</div>
+              <div class="lead-info">
+                <div class="lead-name">Vikram Rao</div>
+                <div class="lead-co">BrightMind</div>
+              </div>
+              <div class="score-wrap">
+                <div class="score-bg"><div class="score-fill" style="width:100%"></div></div>
+                <span style="font-size:10px;color:var(--txt3);min-width:22px">100</span>
+              </div>
+              <span class="lead-pill lp-won">Won</span>
+              <div class="lead-val">₹9.5L</div>
+            </div>
+            <div class="lead-row">
+              <div class="lead-av la5">MN</div>
+              <div class="lead-info">
+                <div class="lead-name">Meera Nair</div>
+                <div class="lead-co">Solaris</div>
+              </div>
+              <div class="score-wrap">
+                <div class="score-bg"><div class="score-fill" style="width:32%"></div></div>
+                <span style="font-size:10px;color:var(--txt3);min-width:22px">32</span>
+              </div>
+              <span class="lead-pill lp-cold">Cold</span>
+              <div class="lead-val">₹1.4L</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Assistant Chat -->
+        <div class="ai-chat">
+          <div class="ai-chat-header">
+            <div class="ai-chat-dot"></div>
+            <div class="ai-chat-title">Aura AI Assistant</div>
+            <div class="ai-chat-powered">Powered by Claude</div>
+          </div>
+          <div class="ai-messages">
+            <div class="msg ai">
+              <div class="msg-label">AURA AI</div>
+              Priya Menon hasn't been contacted in 4 days. Her buying signal score jumped to 92 — I recommend sending the revised proposal today. Want me to draft it?
+            </div>
+            <div class="msg user">
+              <div class="msg-label">YOU</div>
+              Yes — include the enterprise tier pricing
+            </div>
+            <div class="msg ai">
+              <div class="msg-label">AURA AI</div>
+              Draft ready. Added enterprise tier + a case study from TechNova's sector. Also flagged 3 at-risk deals with suggested re-engagement scripts.
+            </div>
+          </div>
+          <div class="ai-input-row">
+            <input class="ai-input" placeholder="Ask Aura anything about your pipeline..." />
+            <button class="ai-send">Send ↗</button>
+          </div>
+        </div>
+
+      </div><!-- /col-left -->
+
+      <!-- RIGHT COLUMN -->
+      <div class="col-right">
+
+        <!-- Pipeline Stages -->
+        <div class="panel">
+          <div class="ptitle">
+            <div class="ptitle-text">Pipeline Stages</div>
+            <div class="ptitle-sub">Total: ₹2.84 Cr active</div>
+          </div>
+          <div class="stage-list">
+            <div class="stage-item">
+              <div class="stage-top">
+                <span class="stage-name">
+                  <span class="stage-dot" style="background:#b0b0b0"></span>Prospecting
+                </span>
+                <span class="stage-val">₹1.2 Cr</span>
+              </div>
+              <div class="stage-bar-bg">
+                <div class="stage-bar" style="width:90%;background:#b0b0b0"></div>
+              </div>
+            </div>
+            <div class="stage-item">
+              <div class="stage-top">
+                <span class="stage-name">
+                  <span class="stage-dot" style="background:var(--saf)"></span>Qualified
+                </span>
+                <span class="stage-val">₹84L</span>
+              </div>
+              <div class="stage-bar-bg">
+                <div class="stage-bar" style="width:70%;background:var(--saf)"></div>
+              </div>
+            </div>
+            <div class="stage-item">
+              <div class="stage-top">
+                <span class="stage-name">
+                  <span class="stage-dot" style="background:var(--gold)"></span>Proposal
+                </span>
+                <span class="stage-val">₹62L</span>
+              </div>
+              <div class="stage-bar-bg">
+                <div class="stage-bar" style="width:52%;background:var(--gold)"></div>
+              </div>
+            </div>
+            <div class="stage-item">
+              <div class="stage-top">
+                <span class="stage-name">
+                  <span class="stage-dot" style="background:var(--brn)"></span>Negotiation
+                </span>
+                <span class="stage-val">₹44L</span>
+              </div>
+              <div class="stage-bar-bg">
+                <div class="stage-bar" style="width:37%;background:var(--brn)"></div>
+              </div>
+            </div>
+            <div class="stage-item">
+              <div class="stage-top">
+                <span class="stage-name">
+                  <span class="stage-dot" style="background:var(--green)"></span>Closed Won
+                </span>
+                <span class="stage-val">₹2.84 Cr</span>
+              </div>
+              <div class="stage-bar-bg">
+                <div class="stage-bar" style="width:100%;background:var(--green)"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deal Mix Donut -->
+        <div class="panel">
+          <div class="ptitle">
+            <div class="ptitle-text">Deal Mix</div>
+            <div class="ptitle-sub">142 total deals</div>
+          </div>
+          <div class="donut-row">
+            <svg class="donut-svg" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="28" fill="none" stroke="#3d2000" stroke-width="12"/>
+              <circle cx="40" cy="40" r="28" fill="none" stroke="#ff9800" stroke-width="12"
+                stroke-dasharray="63 113" stroke-dashoffset="0"
+                stroke-linecap="butt" transform="rotate(-90 40 40)"/>
+              <circle cx="40" cy="40" r="28" fill="none" stroke="#f5c518" stroke-width="12"
+                stroke-dasharray="35 113" stroke-dashoffset="-63"
+                stroke-linecap="butt" transform="rotate(-90 40 40)"/>
+              <circle cx="40" cy="40" r="28" fill="none" stroke="#e05c00" stroke-width="12"
+                stroke-dasharray="22 113" stroke-dashoffset="-98"
+                stroke-linecap="butt" transform="rotate(-90 40 40)"/>
+              <text x="40" y="44" text-anchor="middle"
+                font-size="11" font-weight="700" fill="#fff8ee"
+                font-family="Syne,sans-serif">142</text>
+            </svg>
+            <div class="donut-legend">
+              <div class="dl-item"><div class="dl-dot" style="background:#ff9800"></div>New (40%)</div>
+              <div class="dl-item"><div class="dl-dot" style="background:#f5c518"></div>Renewal (25%)</div>
+              <div class="dl-item"><div class="dl-dot" style="background:#e05c00"></div>Upsell (18%)</div>
+              <div class="dl-item"><div class="dl-dot" style="background:#3d2000"></div>Other (17%)</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI Tasks -->
+        <div class="panel">
+          <div class="ptitle">
+            <div class="ptitle-text">AI-Suggested Tasks</div>
+          </div>
+          <div class="task-list">
+            <div class="task-item">
+              <div class="task-cb done" onclick="this.classList.toggle('done')">✓</div>
+              <div class="task-txt">Follow up with Arjun Kapoor</div>
+              <span class="task-pri tp-h">High</span>
+            </div>
+            <div class="task-item">
+              <div class="task-cb" onclick="this.classList.toggle('done');this.textContent=this.classList.contains('done')?'✓':''"></div>
+              <div class="task-txt">Send proposal to TechNova</div>
+              <span class="task-pri tp-h">High</span>
+            </div>
+            <div class="task-item">
+              <div class="task-cb" onclick="this.classList.toggle('done');this.textContent=this.classList.contains('done')?'✓':''"></div>
+              <div class="task-txt">Review Solaris lead score drop</div>
+              <span class="task-pri tp-m">Mid</span>
+            </div>
+            <div class="task-item">
+              <div class="task-cb" onclick="this.classList.toggle('done');this.textContent=this.classList.contains('done')?'✓':''"></div>
+              <div class="task-txt">Update Q1 pipeline forecast</div>
+              <span class="task-pri tp-m">Mid</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="panel">
+          <div class="ptitle">
+            <div class="ptitle-text">Recent Activity</div>
+          </div>
+          <div class="act-list">
+            <div class="act-item">
+              <div class="act-ic aic2">✓</div>
+              <div class="act-body">
+                <div class="act-text">Deal won — Vikram Rao ₹9.5L</div>
+                <div class="act-time">2 min ago · AI assisted close</div>
+              </div>
+            </div>
+            <div class="act-item">
+              <div class="act-ic aic1">★</div>
+              <div class="act-body">
+                <div class="act-text">Score update: Priya Menon → 92</div>
+                <div class="act-time">18 min ago · buying signal</div>
+              </div>
+            </div>
+            <div class="act-item">
+              <div class="act-ic aic3">✉</div>
+              <div class="act-body">
+                <div class="act-text">Email drafted for Finedge proposal</div>
+                <div class="act-time">1 hr ago · AI drafted</div>
+              </div>
+            </div>
+            <div class="act-item">
+              <div class="act-ic aic4">!</div>
+              <div class="act-body">
+                <div class="act-text">3 deals flagged at-risk</div>
+                <div class="act-time">3 hr ago · re-engage nudge sent</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /col-right -->
+    </div><!-- /content -->
+  </main>
+</div>
+
+<!-- ══════════════ SCRIPTS ══════════════ -->
+<script>
+  // ─── Revenue Chart ───
+  const months  = ['J','F','M','A','M','J','J','A','S','O','N','D'];
+  const actual   = [18,22,19,26,31,28,35,40,38,45,52,58];
+  const forecast = [20,23,21,28,30,32,36,41,42,48,54,62];
+
+  new Chart(document.getElementById('revChart'), {
+    type: 'line',
+    data: {
+      labels: months,
+      datasets: [
+        {
+          label: 'Actual',
+          data: actual,
+          borderColor: '#ff9800',
+          backgroundColor: 'rgba(255,152,0,0.07)',
+          borderWidth: 2,
+          pointBackgroundColor: '#ff9800',
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          tension: 0.4,
+          fill: true
+        },
+        {
+          label: 'Forecast',
+          data: forecast,
+          borderColor: '#f5c518',
+          backgroundColor: 'transparent',
+          borderWidth: 1.5,
+          borderDash: [5, 4],
+          pointBackgroundColor: '#f5c518',
+          pointRadius: 3,
+          pointHoverRadius: 4,
+          tension: 0.4,
+          fill: false
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#251500',
+          borderColor: '#3d2000',
+          borderWidth: 1,
+          titleColor: '#fff8ee',
+          bodyColor: '#c09060',
+          callbacks: {
+            label: (ctx) => ' ₹' + ctx.parsed.y + 'L'
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#7a5030', font: { size: 11 } },
+          grid:  { color: 'rgba(61,32,0,0.5)' },
+          border:{ color: '#3d2000' }
+        },
+        y: {
+          ticks: {
+            color: '#7a5030',
+            font: { size: 11 },
+            callback: (v) => '₹' + v + 'L'
+          },
+          grid:  { color: 'rgba(61,32,0,0.5)' },
+          border:{ color: '#3d2000' }
+        }
+      }
+    }
+  });
+
+  // ─── Nav item click highlight ───
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
+    });
+  });
+
+  // ─── AI chat send button ───
+  const input  = document.querySelector('.ai-input');
+  const sendBtn = document.querySelector('.ai-send');
+  const msgArea = document.querySelector('.ai-messages');
+
+  sendBtn.addEventListener('click', sendMsg);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') sendMsg(); });
+
+  function sendMsg() {
+    const text = input.value.trim();
+    if (!text) return;
+    const userMsg = document.createElement('div');
+    userMsg.className = 'msg user';
+    userMsg.innerHTML = '<div class="msg-label">YOU</div>' + text;
+    msgArea.appendChild(userMsg);
+    input.value = '';
+    msgArea.scrollTop = msgArea.scrollHeight;
+
+    setTimeout(() => {
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'msg ai';
+      aiMsg.innerHTML = '<div class="msg-label">AURA AI</div>Analysing pipeline data... I\'ll prepare a recommendation based on your current deal velocity and lead scores.';
+      msgArea.appendChild(aiMsg);
+      msgArea.scrollTop = msgArea.scrollHeight;
+    }, 900);
+  }
+</script>
+</body>
+</html>
