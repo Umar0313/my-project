@@ -1,12 +1,28 @@
-# SalesOS Dashboard Enhancement TODO
-✅ **Current Progress: 3/6** (data.json + dynamic load + New Deal modal)
+# SalesOS Dashboard - Complete Deal Functionality (Approved Plan)
 
-## Approved Plan Steps:
-- [x] 1. Create `data.json` with all static data extracted (metrics, leads, pipeline, deals, tasks, activity)
-- [x] 2. Add fetch() logic in HTML to load data on init/refresh
-- [x] 3. Implement "New Deal" button → modal form (save to localStorage/data)
-- [x] 5. Add "View" buttons to lead rows → detail modals
-- [ ] 4. Make nav items switch content sections (Dashboard/Deals/Leads tabs)
-- [ ] 6. Add auto-refresh (30s) + manual refresh button; update charts/dynamic elements
-- [ ] Test all functionality
-- [ ] attempt_completion
+## Progress Tracker (Updated after each step)
+
+**✅ Step 1: Create/Update TODO.md** - Detailed steps from approved plan.
+
+**✅ Step 2: Enhance robust deal saving in Salesos_dashboard.htm**
+- Added try-catch localStorage error handling + validation.
+- Improved number parsing (positive num required) with specific toasts.
+
+**✅ Step 3: Convert Deals to dedicated toggleable panel**
+- Created Deals panel HTML in col-left with styled table.
+- Added toggleViews('deals'/'dashboard') on nav clicks, show/hide logic.
+- Removed Deals modal HTML; renderDealsTable now targets panel.
+
+**✅ Step 4: Add full CRUD polish & integration** 
+  - [✅] 4.1 Add edit modal HTML + JS: openEditDealModal(id), handleEditSubmit()
+  - [✅] 4.2 Update renderDealsTable(): fix edit onclick to openEditDealModal(id)
+  - [✅] 4.3 Enhance delete: inline compact styling on btn
+  - [✅] 4.4 Verify auto-refresh: table/badge/localStorage sync post-CRUD actions
+
+**⏳ Step 5: Test & finalize**
+- Verify create/edit/delete flow, view toggle, persistence.
+- Update TODO.md to all ✅.
+- attempt_completion.
+
+*Current: Implementing Step 4 via targeted edits to Salesos_dashboard.htm*
+

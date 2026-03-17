@@ -357,12 +357,16 @@
     .col-right { display: flex; flex-direction: column; gap: 14px; }
 
     /* ─── Panel ─── */
-    .panel {
+  .panel {
       background: var(--bg2);
       border: 1px solid var(--border);
       border-radius: 14px;
       padding: 16px;
     }
+    .panel.hidden { display: none; }
+    .deals-table th, .deals-table td { padding: 12px 8px; border-bottom: 1px solid var(--border); }
+    .deals-table th { text-align: left; font-weight: 500; color: var(--txt2); }
+    .deals-table tbody tr:hover { background: var(--bg3); }
     .ptitle {
       display: flex;
       align-items: center;
@@ -621,10 +625,11 @@
       <div class="nav-item active">
         <span class="nav-icon ni-dash">⊞</span>Dashboard
       </div>
-      <div class="nav-item">
+      <div class="nav-item" onclick="toggleViews('deals')">
         <span class="nav-icon ni-deals">◈</span>Deals
-        <span class="nav-badge">342</span>
+        <span class="nav-badge" id="dealsBadge">0</span>
       </div>
+
       <div class="nav-item">
         <span class="nav-icon ni-leads">◎</span>Leads
       </div>
@@ -701,7 +706,7 @@
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
                 <div>
                   <label style="display:block; font-size:12px; color:var(--txt2); margin-bottom:6px;">Value</label>
-                  <input name="value" required type="text" style="width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--txt); font-size:13px;" placeholder="₹5.2L">
+                  <input name="value" required type="text" style="width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--txt); font-size:13px;" placeholder="5.2">
                 </div>
                 <div>
                   <label style="display:block; font-size:12px; color:var(--txt2); margin-bottom:6px;">Stage</label>
@@ -718,6 +723,39 @@
             </form>
           </div>
         </div>
+
+        <div id="editDealModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1001; display:flex; align-items:center; justify-content:center;">
+          <div style="background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:24px; max-width:420px; width:90%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+              <div style="font-family:'Syne',sans-serif; font-size:18px; font-weight:700; color:var(--txt);">Edit Deal</div>
+              <button onclick="closeEditDealModal()" style="background:none; border:none; font-size:20px; color:var(--txt3); cursor:pointer;">×</button>
+            </div>
+            <form id="editDealForm">
+              <input type="hidden" name="id" id="editDealId">
+              <div style="margin-bottom:16px;">
+                <label style="display:block; font-size:12px; color:var(--txt2); margin-bottom:6px;">Deal Name</label>
+                <input name="name" required id="editDealName" style="width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--txt); font-size:13px;">
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+                <div>
+                  <label style="display:block; font-size:12px; color:var(--txt2); margin-bottom:6px;">Value</label>
+                  <input name="value" required type="text" id="editDealValue" style="width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--txt); font-size:13px;">
+                </div>
+                <div>
+                  <label style="display:block; font-size:12px; color:var(--txt2); margin-bottom:6px;">Stage</label>
+                  <select name="stage" required id="editDealStage" style="width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--txt); font-size:13px;">
+                    <option value="Prospecting">Prospecting</option>
+                    <option value="Qualified">Qualified</option>
+                    <option value="Proposal">Proposal</option>
+                    <option value="Negotiation">Negotiation</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" style="width:100%; background:var(--amb); border:none; border-radius:10px; padding:12px; font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--bg); cursor:pointer;">Update Deal</button>
+            </form>
+          </div>
+        </div>
+
         <div class="top-av">RS</div>
       </div>
     </div>
@@ -860,6 +898,40 @@
               </div>
               <span class="lead-pill lp-cold">Cold</span>
               <div class="lead-val">₹1.4L</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deals Panel -->
+        <div id="dealsPanel" class="panel hidden">
+          <div class="ptitle">
+            <div class="ptitle-text">Deals Pipeline</div>
+            <div class="ptitle-sub" id="dealsPanelSub">Total: <span id="dealsPanelCount">0</span> deals</div>
+          </div>
+          <div style="display:flex; gap:12px; margin-bottom:16px;">
+            <button onclick="openNewDealModal()" class="btn-new" style="padding:12px 20px; font-size:12px;">+ New Deal</button>
+            <button onclick="toggleViews('dashboard')" style="background:var(--bg3); border:1px solid var(--border2); color:var(--txt); padding:12px 20px; border-radius:10px; font-weight:500; cursor:pointer;">← Back to Dashboard</button>
+          </div>
+          <div style="overflow:auto;">
+            <table id="dealsTable" style="width:100%; border-collapse:collapse; font-size:13px; min-width:800px;">
+              <thead style="background:var(--bg3);">
+                <tr style="color:var(--txt2);">
+                  <th style="padding:12px 8px; text-align:left; font-weight:500;">Avatar</th>
+                  <th style="padding:12px 8px; text-align:left; font-weight:500;">Name</th>
+                  <th style="padding:12px 8px; text-align:left; font-weight:500;">Value</th>
+                  <th style="padding:12px 8px; text-align:center; font-weight:500; min-width:80px;">Status</th>
+                  <th style="padding:12px 8px; text-align:left; font-weight:500;">Stage</th>
+                  <th style="padding:12px 8px; text-align:center; font-weight:500; min-width:60px;">Score</th>
+                  <th style="padding:12px 8px; text-align:center; font-weight:500;">Created</th>
+                  <th style="padding:12px 8px; text-align:center; font-weight:500; min-width:80px;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="dealsTbody" style="color:var(--txt);">
+                <!-- Dynamic rows -->
+              </tbody>
+            </table>
+            <div id="noDealsMsg" style="text-align:center; padding:40px; color:var(--txt3); display:none;">
+              No deals yet. <button onclick="openNewDealModal()" style="background:var(--saf); color:var(--bg); border:none; padding:8px 16px; border-radius:6px; font-weight:500; cursor:pointer;">Create your first deal</button>
             </div>
           </div>
         </div>
@@ -1066,7 +1138,9 @@
 <!-- ══════════════ SCRIPTS ══════════════ -->
 <script>
   let appData = {};
+  let deals = [];
   let revChart = null;
+
 
   // ─── Load Data from Backend ───
   async function loadData() {
@@ -1323,7 +1397,7 @@
     closeLeadDetail(id);
   }
 
-  // ─── New Deal Modal ───
+// ─── New Deal Modal ───
   function openNewDealModal() {
     document.getElementById('newDealModal').style.display = 'flex';
   }
@@ -1332,54 +1406,226 @@
     document.getElementById('newDealModal').style.display = 'none';
   }
 
+  function openEditDealModal(id) {
+    const deal = deals.find(d => d.id === id);
+    if (!deal) return showToast('❌ Deal not found', 'var(--verm)');
+    
+    document.getElementById('editDealId').value = deal.id;
+    document.getElementById('editDealName').value = deal.name;
+    document.getElementById('editDealValue').value = deal.rawValue;
+    document.getElementById('editDealStage').value = deal.stage;
+    document.getElementById('editDealModal').style.display = 'flex';
+  }
+
+  function closeEditDealModal() {
+    document.getElementById('editDealModal').style.display = 'none';
+    document.getElementById('editDealForm').reset();
+  }
+
+  // ESC to close modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeNewDealModal();
+      closeEditDealModal();
+    }
+  });
+
   document.getElementById('newDealForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const valueStr = formData.get('value').replace(/[^0-9.]/g, '').trim();
+    const numericValue = parseFloat(valueStr);
+    
+    if (!formData.get('name').trim() || !valueStr || isNaN(numericValue) || numericValue <= 0) {
+      showToast('❌ Invalid name or value (must be positive number).', 'var(--verm)');
+      return;
+    }
+
     const deal = {
       id: Date.now(),
-      name: formData.get('name'),
-      value: formData.get('value'),
+      name: formData.get('name').trim(),
+      value: `₹${numericValue.toLocaleString('en-IN', {maximumFractionDigits: 1})}L`,
+      rawValue: numericValue,
       stage: formData.get('stage'),
-      score: Math.floor(Math.random() * 30) + 70, // Random score 70-99
-      status: 'hot',
-      avatar: formData.get('name').slice(0,2).toUpperCase(),
-      color: 'la1'
+      score: Math.floor(Math.random() * 30) + 70,
+      status: 'new',
+      avatar: formData.get('name').trim().slice(0,2).toUpperCase(),
+      color: 'la1',
+      created: new Date().toISOString()
     };
 
-    // Add to localStorage deals
-    let deals = JSON.parse(localStorage.getItem('salesosDeals') || '[]');
-    deals.unshift(deal); // Add to top
-    localStorage.setItem('salesosDeals', JSON.stringify(deals));
+    try {
+      loadDeals();
+      deals.unshift(deal);
+      localStorage.setItem('salesosDeals', JSON.stringify(deals));
+      renderDealsTable();
+      updateDealsCount();
 
-    // Update metrics (increment deals)
-    appData.metrics.deals.value += 1;
-    document.querySelectorAll('.mcard')[1].querySelector('.mcard-val').textContent = appData.metrics.deals.value;
+      closeNewDealModal();
+      e.target.reset();
+      showToast(`✅ "${deal.name}" created! Value: ${deal.value}`);
 
-    // Close modal & reset form
-    closeNewDealModal();
-    e.target.reset();
+      console.log('New deal saved:', deal);
+    } catch (err) {
+      showToast('❌ Save failed: ' + (err.message || 'Storage error'), 'var(--verm)');
+      console.error('Save error:', err);
+    }
+  });
 
-    // Show success toast
+  document.getElementById('editDealForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const dealId = parseInt(formData.get('id'));
+    const valueStr = formData.get('value').replace(/[^0-9.]/g, '').trim();
+    const numericValue = parseFloat(valueStr);
+    
+    if (!formData.get('name').trim() || !valueStr || isNaN(numericValue) || numericValue <= 0) {
+      showToast('❌ Invalid name or value (must be positive number).', 'var(--verm)');
+      return;
+    }
+
+    const dealIndex = deals.findIndex(d => d.id === dealId);
+    if (dealIndex === -1) {
+      showToast('❌ Deal not found', 'var(--verm)');
+      return;
+    }
+
+    deals[dealIndex] = {
+      ...deals[dealIndex],
+      name: formData.get('name').trim(),
+      value: `₹${numericValue.toLocaleString('en-IN', {maximumFractionDigits: 1})}L`,
+      rawValue: numericValue,
+      stage: formData.get('stage')
+    };
+
+    try {
+      localStorage.setItem('salesosDeals', JSON.stringify(deals));
+      renderDealsTable();
+      updateDealsCount();
+
+      closeEditDealModal();
+      showToast(`✅ "${deals[dealIndex].name}" updated! Value: ${deals[dealIndex].value}`);
+
+      console.log('Deal updated:', deals[dealIndex]);
+    } catch (err) {
+      showToast('❌ Update failed: ' + (err.message || 'Storage error'), 'var(--verm)');
+      console.error('Update error:', err);
+    }
+  });
+
+
+  // Close modals on outside click
+  document.getElementById('newDealModal').addEventListener('click', (e) => {
+    if (e.target.id === 'newDealModal') closeNewDealModal();
+  });
+  document.getElementById('editDealModal').addEventListener('click', (e) => {
+    if (e.target.id === 'editDealModal') closeEditDealModal();
+  });
+
+  // ─── Deals Functions ───
+  function loadDeals() {
+    try {
+      deals = JSON.parse(localStorage.getItem('salesosDeals') || '[]');
+    } catch (e) {
+      deals = [];
+    }
+  }
+
+  function updateDealsCount() {
+    const badge = document.querySelector('.nav-badge');
+    loadDeals();
+    if (badge && deals.length > 0) {
+      badge.textContent = deals.length;
+    }
+  }
+
+  function showToast(msg, bg = 'var(--saf)') {
     const toast = document.createElement('div');
-    toast.style.cssText = 'position:fixed; top:20px; right:20px; background:var(--saf); color:var(--bg); padding:12px 20px; border-radius:8px; font-weight:500; z-index:2000; transform:translateX(400px); transition:transform 0.3s;';
-    toast.textContent = `✅ New deal "${deal.name}" created!`;
+    toast.style.cssText = `position:fixed; top:20px; right:20px; background:${bg}; color:var(--bg); padding:12px 20px; border-radius:8px; font-weight:500; z-index:2000; transform:translateX(400px); transition:transform 0.3s;`;
+    toast.textContent = msg;
     document.body.appendChild(toast);
     setTimeout(() => toast.style.transform = 'translateX(0)', 100);
     setTimeout(() => {
       toast.style.transform = 'translateX(400px)';
       setTimeout(() => document.body.removeChild(toast), 300);
     }, 3000);
+  }
 
-    console.log('New deal created:', deal);
-  });
+  function deleteDeal(id) {
+    loadDeals();
+    if (confirm('Delete this deal permanently?')) {
+      deals = deals.filter(d => d.id !== id);
+      localStorage.setItem('salesosDeals', JSON.stringify(deals));
+      renderDealsTable();
+      updateDealsCount();
+      showToast('🗑️ Deal deleted');
+    }
+  }
 
-  // Close modal on outside click
-  document.getElementById('newDealModal').addEventListener('click', (e) => {
-    if (e.target.id === 'newDealModal') closeNewDealModal();
-  });
+  function renderDealsTable() {
+    const tbody = document.getElementById('dealsTbody');
+    const noDealsMsg = document.getElementById('noDealsMsg');
+    const countEl = document.getElementById('dealsPanelCount');
+    const badgeEl = document.getElementById('dealsBadge');
+    
+    if (deals.length === 0) {
+      tbody.style.display = 'none';
+      noDealsMsg.style.display = 'block';
+    } else {
+      tbody.style.display = 'table-row-group';
+      noDealsMsg.style.display = 'none';
+      tbody.innerHTML = deals.map(deal => `
+        <tr>
+          <td><div class="lead-av ${deal.color}" style="width:32px;height:32px;font-size:12px;">${deal.avatar}</div></td>
+          <td style="font-weight:500;">${deal.name}</td>
+          <td style="color:var(--gold); font-weight:600;">${deal.value}</td>
+          <td><span class="lead-pill lp-${deal.status}">${deal.status.toUpperCase()}</span></td>
+          <td>${deal.stage}</td>
+          <td style="text-align:center;">${deal.score}</td>
+          <td style="text-align:center; font-size:12px; color:var(--txt3);">${new Date(deal.created).toLocaleDateString('en-IN')}</td>
+          <td style="text-align:center;">
+            <button onclick="openEditDealModal(${deal.id})" style="background:var(--saf); color:var(--bg); border:none; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:500; cursor:pointer; margin-right:6px; font-family:'Syne',sans-serif;">✎ Edit</button>
+            <button onclick="deleteDeal(${deal.id})" style="background:var(--verm); color:var(--bg); border:none; padding:4px 10px; border-radius:6px; font-size:11px; cursor:pointer; font-family:'Syne',sans-serif;">🗑️ Del</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+    
+    if (countEl) countEl.textContent = deals.length;
+    if (badgeEl) badgeEl.textContent = deals.length;
+    if (countEl) document.getElementById('dealsPanelSub').innerHTML = `Total: <span id="dealsPanelCount">${deals.length}</span> deals`;
+  }
+
+  function toggleViews(view) {
+    const dashboardContent = document.querySelector('.content');
+    const dealsPanel = document.getElementById('dealsPanel');
+    const dashNav = document.querySelector('.ni-dash').parentElement;
+    const dealsNav = document.querySelector('.ni-deals').parentElement;
+    
+    if (view === 'deals') {
+      dashboardContent.style.display = 'none';
+      dealsPanel.classList.remove('hidden');
+      dealsNav.classList.add('active');
+      dashNav.classList.remove('active');
+      loadDeals();
+      renderDealsTable();
+      document.querySelector('.main').scrollTop = 0;
+    } else {
+      dashboardContent.style.display = 'grid';
+      dealsPanel.classList.add('hidden');
+      dashNav.classList.add('active');
+      dealsNav.classList.remove('active');
+    }
+  }
 
   // ─── Init ───
-  window.addEventListener('load', loadData);
+  window.addEventListener('load', () => {
+    loadData();
+    loadDeals();
+    updateDealsCount();
+    renderDealsTable();
+  });
+
 </script>
 
 </body>
