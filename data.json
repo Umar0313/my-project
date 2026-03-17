@@ -1,0 +1,55 @@
+{
+  "metrics": {
+    "revenue": {"value": "2.84 Cr", "change": "+28.4%", "type": "up"},
+    "deals": {"value": 342, "change": "+14", "subtitle": "12 closing this week"},
+    "leads": {"value": 1847, "change": "+31%", "subtitle": "97.2% accuracy"},
+    "avgSize": {"value": "₹8.3L", "change": "+6.2%", "subtitle": "up from ₹7.8L"}
+  },
+  "revenueChart": {
+    "months": ["J","F","M","A","M","J","J","A","S","O","N","D"],
+    "actual": [18,22,19,26,31,28,35,40,38,45,52,58],
+    "forecast": [20,23,21,28,30,32,36,41,42,48,54,62]
+  },
+  "leads": [
+    {"id":1, "name": "Priya Menon", "company": "TechNova", "score":92, "status":"hot", "value":"₹4.8L", "avatar":"PM", "color":"la1"},
+    {"id":2, "name": "Arjun Kapoor", "company": "Finedge", "score":87, "status":"hot", "value":"₹7.2L", "avatar":"AK", "color":"la2"},
+    {"id":3, "name": "Sana Sheikh", "company": "UrbanCore", "score":68, "status":"warm", "value":"₹2.1L", "avatar":"SS", "color":"la3"},
+    {"id":4, "name": "Vikram Rao", "company": "BrightMind", "score":100, "status":"won", "value":"₹9.5L", "avatar":"VR", "color":"la4"},
+    {"id":5, "name": "Meera Nair", "company": "Solaris", "score":32, "status":"cold", "value":"₹1.4L", "avatar":"MN", "color":"la5"}
+  ],
+  "pipeline": [
+    {"name": "Prospecting", "value": "₹1.2 Cr", "progress": 90, "color": "#b0b0b0"},
+    {"name": "Qualified", "value": "₹84L", "progress": 70, "color": "#ff9800"},
+    {"name": "Proposal", "value": "₹62L", "progress": 52, "color": "#f5c518"},
+    {"name": "Negotiation", "value": "₹44L", "progress": 37, "color": "#e05c00"},
+    {"name": "Closed Won", "value": "₹2.84 Cr", "progress": 100, "color": "#7ab648"}
+  ],
+  "dealMix": {
+    "total": 142,
+    "segments": [
+      {"name": "New", "pct": 40, "color": "#ff9800"},
+      {"name": "Renewal", "pct": 25, "color": "#f5c518"},
+      {"name": "Upsell", "pct": 18, "color": "#e05c00"},
+      {"name": "Other", "pct": 17, "color": "#3d2000"}
+    ]
+  },
+  "tasks": [
+    {"text": "Follow up with Arjun Kapoor", "done": true, "priority": "h"},
+    {"text": "Send proposal to TechNova", "done": false, "priority": "h"},
+    {"text": "Review Solaris lead score drop", "done": false, "priority": "m"},
+    {"text": "Update Q1 pipeline forecast", "done": false, "priority": "m"}
+  ],
+  "activity": [
+    {"icon": "aic2", "text": "Deal won — Vikram Rao ₹9.5L", "time": "2 min ago", "note": "AI assisted close"},
+    {"icon": "aic1", "text": "Score update: Priya Menon → 92", "time": "18 min ago", "note": "buying signal"},
+    {"icon": "aic3", "text": "Email drafted for Finedge proposal", "time": "1 hr ago", "note": "AI drafted"},
+    {"icon": "aic4", "text": "3 deals flagged at-risk", "time": "3 hr ago", "note": "re-engage nudge sent"}
+  ],
+  "aiChat": {
+    "messages": [
+      {"role": "ai", "text": "Priya Menon hasn't been contacted in 4 days. Her buying signal score jumped to 92 — I recommend sending the revised proposal today. Want me to draft it?"},
+      {"role": "user", "text": "Yes — include the enterprise tier pricing"},
+      {"role": "ai", "text": "Draft ready. Added enterprise tier + a case study from TechNova's sector. Also flagged 3 at-risk deals with suggested re-engagement scripts."}
+    ]
+  }
+}

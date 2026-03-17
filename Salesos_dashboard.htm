@@ -683,10 +683,41 @@
           <div class="btn-month-icon">⊞</div>
           <div class="btn-month-val">Mar<br>2026</div>
         </div>
-        <button class="btn-new">
+        <button class="btn-new" onclick="openNewDealModal()">
           <span class="btn-new-plus">+</span>
           New<br>Deal
         </button>
+        <div id="newDealModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; display:flex; align-items:center; justify-content:center;">
+          <div style="background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:24px; max-width:420px; width:90%;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+              <div style="font-family:'Syne',sans-serif; font-size:18px; font-weight:700; color:var(--txt);">New Deal</div>
+              <button onclick="closeNewDealModal()" style="background:none; border:none; font-size:20px; color:var(--txt3); cursor:pointer;">×</button>
+            </div>
+            <form id="newDealForm">
+              <div style="margin-bottom:16px;">
+                <label style="display:block; font-size:12px; color:var(--txt2); margin-bottom:6px;">Deal Name</label>
+                <input name="name" required style="width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--txt); font-size:13px;" placeholder="e.g. TechCorp Enterprise">
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px;">
+                <div>
+                  <label style="display:block; font-size:12px; color:var(--txt2); margin-bottom:6px;">Value</label>
+                  <input name="value" required type="text" style="width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--txt); font-size:13px;" placeholder="₹5.2L">
+                </div>
+                <div>
+                  <label style="display:block; font-size:12px; color:var(--txt2); margin-bottom:6px;">Stage</label>
+                  <select name="stage" required style="width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:8px; padding:10px 12px; color:var(--txt); font-size:13px;">
+                    <option value="">Select</option>
+                    <option value="Prospecting">Prospecting</option>
+                    <option value="Qualified">Qualified</option>
+                    <option value="Proposal">Proposal</option>
+                    <option value="Negotiation">Negotiation</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" style="width:100%; background:var(--saf); border:none; border-radius:10px; padding:12px; font-family:'Syne',sans-serif; font-size:14px; font-weight:700; color:var(--bg); cursor:pointer;">Create Deal</button>
+            </form>
+          </div>
+        </div>
         <div class="top-av">RS</div>
       </div>
     </div>
@@ -1034,77 +1065,185 @@
 
 <!-- ══════════════ SCRIPTS ══════════════ -->
 <script>
-  // ─── Revenue Chart ───
-  const months  = ['J','F','M','A','M','J','J','A','S','O','N','D'];
-  const actual   = [18,22,19,26,31,28,35,40,38,45,52,58];
-  const forecast = [20,23,21,28,30,32,36,41,42,48,54,62];
+  let appData = {};
+  let revChart = null;
 
-  new Chart(document.getElementById('revChart'), {
-    type: 'line',
-    data: {
-      labels: months,
-      datasets: [
-        {
-          label: 'Actual',
-          data: actual,
-          borderColor: '#ff9800',
-          backgroundColor: 'rgba(255,152,0,0.07)',
-          borderWidth: 2,
-          pointBackgroundColor: '#ff9800',
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          tension: 0.4,
-          fill: true
+  // ─── Load Data from Backend ───
+  async function loadData() {
+    try {
+      const response = await fetch('./data.json');
+      appData = await response.json();
+      
+      // Update Metrics
+      document.querySelectorAll('.mcard')[0].innerHTML = `
+        <div class="mcard-top">
+          <div class="mcard-icon">₹</div>
+          <span class="mcard-badge mb-up">${appData.metrics.revenue.change}</span>
+        </div>
+        <div class="mcard-val">${appData.metrics.revenue.value}</div>
+        <div class="mcard-label">Total Revenue</div>
+        <div class="mcard-sub">vs last quarter</div>
+      `;
+      document.querySelectorAll('.mcard')[1].innerHTML = `
+        <div class="mcard-top">
+          <div class="mcard-icon">◈</div>
+          <span class="mcard-badge mb-up">${appData.metrics.deals.change}</span>
+        </div>
+        <div class="mcard-val">${appData.metrics.deals.value}</div>
+        <div class="mcard-label">Active Deals</div>
+        <div class="mcard-sub">${appData.metrics.deals.subtitle}</div>
+      `;
+      document.querySelectorAll('.mcard')[2].innerHTML = `
+        <div class="mcard-top">
+          <div class="mcard-icon">✦</div>
+          <span class="mcard-badge mb-up">${appData.metrics.leads.change}</span>
+        </div>
+        <div class="mcard-val">${appData.metrics.leads.value.toLocaleString()}</div>
+        <div class="mcard-label">AI Leads Scored</div>
+        <div class="mcard-sub">${appData.metrics.leads.subtitle}</div>
+      `;
+      document.querySelectorAll('.mcard')[3].innerHTML = `
+        <div class="mcard-top">
+          <div class="mcard-icon">▲</div>
+          <span class="mcard-badge mb-up">${appData.metrics.avgSize.change}</span>
+        </div>
+        <div class="mcard-val">${appData.metrics.avgSize.value}</div>
+        <div class="mcard-label">Avg Deal Size</div>
+        <div class="mcard-sub">${appData.metrics.avgSize.subtitle}</div>
+      `;
+
+      // Update Leads Table
+      const leadsList = document.querySelector('.leads-list');
+      leadsList.innerHTML = appData.leads.map(lead => `
+        <div class="lead-row" data-lead-id="${lead.id}">
+          <div class="lead-av ${lead.color}">${lead.avatar}</div>
+          <div class="lead-info">
+            <div class="lead-name">${lead.name}</div>
+            <div class="lead-co">${lead.company}</div>
+          </div>
+          <div class="score-wrap">
+            <div class="score-bg"><div class="score-fill" style="width:${lead.score}%"></div></div>
+            <span style="font-size:10px;color:var(--txt3);min-width:22px">${lead.score}</span>
+          </div>
+          <span class="lead-pill lp-${lead.status}"> ${lead.status.charAt(0).toUpperCase() + lead.status.slice(1)}</span>
+          <button onclick="openLeadDetail(${lead.id})" style="background:var(--saf); border:none; color:var(--bg); padding:4px 10px; border-radius:6px; font-size:11px; font-weight:500; cursor:pointer; margin-left:auto;">View</button>
+          <div class="lead-val">${lead.value}</div>
+        </div>
+        <div id="leadDetailModal-${lead.id}" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000;">
+          <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:24px; max-width:500px; max-height:80vh; overflow:auto;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <h3 style="font-family:'Syne',sans-serif; font-size:20px; color:var(--txt);">Lead Details</h3>
+              <button onclick="closeLeadDetail(${lead.id})" style="background:none; border:none; font-size:24px; color:var(--txt3);">×</button>
+            </div>
+            <div id="leadDetailContent-${lead.id}" style="color:var(--txt);">
+              <!-- Dynamic content loaded here -->
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // Update Pipeline
+      const stageList = document.querySelector('.stage-list');
+      stageList.innerHTML = appData.pipeline.map(stage => `
+        <div class="stage-item">
+          <div class="stage-top">
+            <span class="stage-name">
+              <span class="stage-dot" style="background:${stage.color}"></span>${stage.name}
+            </span>
+            <span class="stage-val">${stage.value}</span>
+          </div>
+          <div class="stage-bar-bg">
+            <div class="stage-bar" style="width:${stage.progress}%;background:${stage.color}"></div>
+          </div>
+        </div>
+      `).join('');
+
+      // Update Tasks
+      const taskList = document.querySelector('.task-list');
+      taskList.innerHTML = appData.tasks.map(task => {
+        const priClass = task.priority === 'h' ? 'tp-h' : 'tp-m';
+        const doneClass = task.done ? 'done' : '';
+        const check = task.done ? '✓' : '';
+        return `
+          <div class="task-item">
+            <div class="task-cb ${doneClass}" onclick="toggleTask(this)">${check}</div>
+            <div class="task-txt">${task.text}</div>
+            <span class="task-pri ${priClass}">${task.priority.toUpperCase()}</span>
+          </div>
+        `;
+      }).join('');
+
+      // Update Activity
+      const actList = document.querySelector('.act-list');
+      actList.innerHTML = appData.activity.map(act => `
+        <div class="act-item">
+          <div class="act-ic ${act.icon}">${act.icon === 'aic2' ? '✓' : act.icon === 'aic1' ? '★' : act.icon === 'aic3' ? '✉' : '!'}</div>
+          <div class="act-body">
+            <div class="act-text">${act.text}</div>
+            <div class="act-time">${act.time} · ${act.note}</div>
+          </div>
+        </div>
+      `).join('');
+
+      // Update Revenue Chart
+      if (revChart) revChart.destroy();
+      revChart = new Chart(document.getElementById('revChart'), {
+        type: 'line',
+        data: {
+          labels: appData.revenueChart.months,
+          datasets: [
+            {
+              label: 'Actual',
+              data: appData.revenueChart.actual,
+              borderColor: '#ff9800',
+              backgroundColor: 'rgba(255,152,0,0.07)',
+              borderWidth: 2,
+              pointBackgroundColor: '#ff9800',
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              tension: 0.4,
+              fill: true
+            },
+            {
+              label: 'Forecast',
+              data: appData.revenueChart.forecast,
+              borderColor: '#f5c518',
+              backgroundColor: 'transparent',
+              borderWidth: 1.5,
+              borderDash: [5, 4],
+              pointBackgroundColor: '#f5c518',
+              pointRadius: 3,
+              pointHoverRadius: 4,
+              tension: 0.4,
+              fill: false
+            }
+          ]
         },
-        {
-          label: 'Forecast',
-          data: forecast,
-          borderColor: '#f5c518',
-          backgroundColor: 'transparent',
-          borderWidth: 1.5,
-          borderDash: [5, 4],
-          pointBackgroundColor: '#f5c518',
-          pointRadius: 3,
-          pointHoverRadius: 4,
-          tension: 0.4,
-          fill: false
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#251500',
-          borderColor: '#3d2000',
-          borderWidth: 1,
-          titleColor: '#fff8ee',
-          bodyColor: '#c09060',
-          callbacks: {
-            label: (ctx) => ' ₹' + ctx.parsed.y + 'L'
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: '#7a5030', font: { size: 11 } }, grid: { color: 'rgba(61,32,0,0.5)' }, border: { color: '#3d2000' } },
+            y: { 
+              ticks: { color: '#7a5030', font: { size: 11 }, callback: (v) => '₹' + v + 'L' },
+              grid: { color: 'rgba(61,32,0,0.5)' }, border: { color: '#3d2000' }
+            }
           }
         }
-      },
-      scales: {
-        x: {
-          ticks: { color: '#7a5030', font: { size: 11 } },
-          grid:  { color: 'rgba(61,32,0,0.5)' },
-          border:{ color: '#3d2000' }
-        },
-        y: {
-          ticks: {
-            color: '#7a5030',
-            font: { size: 11 },
-            callback: (v) => '₹' + v + 'L'
-          },
-          grid:  { color: 'rgba(61,32,0,0.5)' },
-          border:{ color: '#3d2000' }
-        }
-      }
+      });
+
+      console.log('✅ Dashboard data loaded from backend');
+    } catch (error) {
+      console.error('Failed to load data:', error);
     }
-  });
+  }
+
+  // ─── Task Toggle ───
+  function toggleTask(cb) {
+    cb.classList.toggle('done');
+    cb.textContent = cb.classList.contains('done') ? '✓' : '';
+  }
 
   // ─── Nav item click highlight ───
   document.querySelectorAll('.nav-item').forEach(item => {
@@ -1115,7 +1254,7 @@
   });
 
   // ─── AI chat send button ───
-  const input  = document.querySelector('.ai-input');
+  const input = document.querySelector('.ai-input');
   const sendBtn = document.querySelector('.ai-send');
   const msgArea = document.querySelector('.ai-messages');
 
@@ -1140,6 +1279,108 @@
       msgArea.scrollTop = msgArea.scrollHeight;
     }, 900);
   }
+
+  // ─── Lead Detail Functions ───
+  function openLeadDetail(id) {
+    const lead = appData.leads.find(l => l.id == id);
+    const content = document.getElementById(`leadDetailContent-${id}`);
+    content.innerHTML = `
+      <div style="text-align:center; margin-bottom:20px;">
+        <div class="lead-av ${lead.color}" style="width:60px; height:60px; font-size:22px; margin:0 auto 12px;">${lead.avatar}</div>
+        <h2 style="font-family:'Syne',sans-serif; font-size:24px; margin-bottom:8px;">${lead.name}</h2>
+        <div style="color:var(--saf); font-size:14px; font-weight:500;">${lead.company}</div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; font-size:13px; margin-bottom:20px;">
+        <div><strong>Score:</strong> <span style="color:var(--saf); font-weight:700;">${lead.score}</span></div>
+        <div><strong>Status:</strong> <span class="lead-pill lp-${lead.status}">${lead.status.toUpperCase()}</span></div>
+        <div><strong>Value:</strong> <span style="color:var(--gold); font-weight:600;">${lead.value}</span></div>
+      </div>
+      <div style="background:var(--bg3); padding:16px; border-radius:10px; font-size:12px;">
+        <strong>AI Notes:</strong> This lead shows strong buying signals. Last interaction 4 days ago. <strong>Recommended Action:</strong> Send updated proposal with enterprise pricing.
+      </div>
+      <div style="margin-top:24px; display:flex; gap:12px;">
+        <button onclick="markLeadAction(${id}, 'email')" style="flex:1; background:var(--saf); color:var(--bg); border:none; padding:12px; border-radius:8px; font-weight:500; cursor:pointer;">📧 Send Email</button>
+        <button onclick="markLeadAction(${id}, 'call')" style="flex:1; background:var(--bg4); color:var(--txt); border:1px solid var(--border2); padding:12px; border-radius:8px; font-weight:500; cursor:pointer;">📞 Schedule Call</button>
+      </div>
+    `;
+    document.getElementById(`leadDetailModal-${id}`).style.display = 'block';
+  }
+
+  function closeLeadDetail(id) {
+    document.getElementById(`leadDetailModal-${id}`).style.display = 'none';
+  }
+
+  function markLeadAction(id, action) {
+    console.log(`Action "${action}" marked for lead ${id}`);
+    // Simulate API call
+    setTimeout(() => {
+      const toast = document.createElement('div');
+      toast.style.cssText = 'position:fixed; top:20px; right:20px; background:var(--green); color:var(--bg); padding:12px 20px; border-radius:8px; font-weight:500; z-index:2000;';
+      toast.textContent = `✅ ${action.toUpperCase()} action scheduled!`;
+      document.body.appendChild(toast);
+      setTimeout(() => document.body.removeChild(toast), 2500);
+    }, 500);
+    closeLeadDetail(id);
+  }
+
+  // ─── New Deal Modal ───
+  function openNewDealModal() {
+    document.getElementById('newDealModal').style.display = 'flex';
+  }
+
+  function closeNewDealModal() {
+    document.getElementById('newDealModal').style.display = 'none';
+  }
+
+  document.getElementById('newDealForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const deal = {
+      id: Date.now(),
+      name: formData.get('name'),
+      value: formData.get('value'),
+      stage: formData.get('stage'),
+      score: Math.floor(Math.random() * 30) + 70, // Random score 70-99
+      status: 'hot',
+      avatar: formData.get('name').slice(0,2).toUpperCase(),
+      color: 'la1'
+    };
+
+    // Add to localStorage deals
+    let deals = JSON.parse(localStorage.getItem('salesosDeals') || '[]');
+    deals.unshift(deal); // Add to top
+    localStorage.setItem('salesosDeals', JSON.stringify(deals));
+
+    // Update metrics (increment deals)
+    appData.metrics.deals.value += 1;
+    document.querySelectorAll('.mcard')[1].querySelector('.mcard-val').textContent = appData.metrics.deals.value;
+
+    // Close modal & reset form
+    closeNewDealModal();
+    e.target.reset();
+
+    // Show success toast
+    const toast = document.createElement('div');
+    toast.style.cssText = 'position:fixed; top:20px; right:20px; background:var(--saf); color:var(--bg); padding:12px 20px; border-radius:8px; font-weight:500; z-index:2000; transform:translateX(400px); transition:transform 0.3s;';
+    toast.textContent = `✅ New deal "${deal.name}" created!`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.style.transform = 'translateX(0)', 100);
+    setTimeout(() => {
+      toast.style.transform = 'translateX(400px)';
+      setTimeout(() => document.body.removeChild(toast), 300);
+    }, 3000);
+
+    console.log('New deal created:', deal);
+  });
+
+  // Close modal on outside click
+  document.getElementById('newDealModal').addEventListener('click', (e) => {
+    if (e.target.id === 'newDealModal') closeNewDealModal();
+  });
+
+  // ─── Init ───
+  window.addEventListener('load', loadData);
 </script>
+
 </body>
 </html>
